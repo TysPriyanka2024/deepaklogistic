@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FuelDemo | Ledger Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-width: 800px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ledger Details</h2>
+        <p>Dear Admin,</p>
+        <p>Please find below the ledger details:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Sr No</th>
+                    <th>Date</th>
+                    <th>Challan Number</th>
+                    <th>Vehicle Number</th>
+                    <th>Record No</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Total Amount</th>
+                    <th>Order</th>
+                    <th>Organisation</th>
+                    <th>Delivery Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (orders && orders.length > 0) { %>
+                    <% orders.forEach((row, index) => { %>
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><%= new Date(row.created_date).toLocaleDateString('en-GB', options) %></td>
+                            <td><%= row.challan_number || "N/A" %></td>
+                            <td><%= row.user_id?.vehicle_number || "N/A" %></td>
+                            <td><%= ordersCount + 1800 - index %></td>
+                            <td><%= row.product_items[0]?.quantity || 0 %></td>
+                            <td><%= row.product_items[0]?.price || 0 %></td>
+                            <td><%= row.total_price || 0 %></td>
+                            <td><%= row.order_id || "N/A" %></td>
+                            <td><%= row.user_id?.company || "N/A" %></td>
+                            <td><%= row.is_delivery_man_assigned ? "Assigned" : "Not Assigned" %></td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="11" style="text-align: center;">No Records Found</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+
+        <p class="footer">Thank you for using FuelDemo. For any queries, feel free to contact us.</p>
+    </div>
+</body>
+</html>

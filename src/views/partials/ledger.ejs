@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FuelDemo | Ledger</title>
+        <style>
+            .container {
+                width: 100%;
+                max-width: 1600px; /* Prevents stretching on large screens */
+                margin: auto;
+                padding: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                background-color: #ffffff;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+            h2{
+                    text-align: center;
+                }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            
+            th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: center;
+                word-wrap: break-word; /* Ensures content wraps properly */
+                white-space: nowrap; /* Allow wrapping text */
+            }
+
+            th {
+                background-color: #f4f4f4;
+            }
+
+            .button-group ul {
+                padding: 0;
+                margin: 20px 0 0 0;
+                display: flex;
+                list-style: none;
+                justify-content: center;
+            }
+
+            .button-group li {
+                margin-right: 5%;
+            }
+
+            .btn-primary {
+                border: 2px solid #0da487 !important;
+                color: #0da487;
+                background-color: #f9f9f6;
+                padding: 10px 20px;
+                text-decoration: none;
+            }
+
+            .btn-primary:hover {
+                color: white;
+                background-color: #097560 !important;
+                border-color: #097560 !important;
+            }
+
+            /* Styles for print */
+            @media print {
+                h2{
+                    text-align: center;
+                }
+                body {
+                    font-size: 12px;
+                }
+
+                .container {
+                    width: 100%;
+                    padding: 0;
+                    margin: 0;
+                    box-shadow: none;
+                    border-radius: 0;
+                }
+
+                .hide-on-print {
+                    display: none;
+                }
+
+                table {
+                    width: 100%;
+                    font-size: 12px;
+                    border: 1px solid black;
+                }
+
+                th, td {
+                    padding: 5px;
+                    font-size: 12px;
+                    word-wrap: break-word; /* Ensures content wraps properly */
+                    white-space: nowrap;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container" id="printableArea">
+            <h2>Ledger</h2>
+            <table>
+                <tr>
+                    <th>Sr No</th>
+                    <th>Order Id</th>
+                    <th>Order Date</th>
+                    <th>Dispense Time</th>
+                    <th>Challan No.</th>
+                    <th>Authorised By</th>
+                    <th>Dispensed To</th>
+                    <th>Ordered Quantity</th>
+                    <th>Dispensed</th>
+                    <th>Customer Asset Name</th>
+                    <th>Total Amount</th>
+                </tr>
+                <% if (orders != '') { %>
+                    <% orders.forEach((row, index) => { %>  
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><a><%= row.order_id %></a></td>
+                            <td><%= row.created_date.toLocaleDateString('en-UK', options) %></td>
+                            <td>
+                                <% 
+                                    const createdDate = new Date(row.updated_date);
+                                    const formattedDate = createdDate.toLocaleDateString('en-GB');
+                                    const formattedTime = createdDate.toLocaleTimeString('en-GB');
+                                %>
+                                <%= formattedDate %> <%= formattedTime %>
+                            </td>
+                            <td> <%= row.challan_number %></td>
+                            <td><%= row.authorised_by %>
+                                <!-- <% if(row.is_delivery_man_assigned) { %>
+                                    <div>
+                                        <span><%= user.first_name %> <%= user.last_name %></span>
+                                    </div>
+                                <% } else { %>
+                                    <div>
+                                        <span style="background-color: rgba(154,154,154,0.2); color: #9a9a9a;">
+                                            <%= row.delivery_man %>
+                                        </span>
+                                    </div>
+                                <% } %> -->
+                            </td>
+                            <td><a><%= row.user_id.vehicle_number %></a></td>
+                            <td><%= row.product_items[0].quantity %></td>
+                            <td>
+                                <% if (row.status == "Delivered") { %>
+                                    <span><%= row.product_items[0].quantity %></span>
+                                <% } else { %>
+                                    <span>0</span>
+                                <% } %>
+                            </td>
+                            <td><a><%= row.user_id.company %></a></td>
+                            <td><%= row.total_price %></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="11">Nothing To Show</td>
+                    </tr>
+                <% } %>
+
+                <tr>
+                    <td colspan="7"></td>
+                    <td style="white-space: normal;">Total Quantity: <%- totalQuantity %></td>
+                    <td colspan="2"></td>
+                    <td  style="white-space: normal;">Total Amount: <%- totalAmount %></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="row mt-5">
+            <div class="col-xxl-12 mx-auto my-3">
+                <div class="button-group hide-on-print">
+                    <ul>
+                        <% if (user.usertype === 'Admin') { %>
+                            <li><a href="/admin/orders/ledger" class="btn btn-primary">Back</a></li>
+                            <li><a class="btn btn-primary" onclick="printLedger()">Print</a></li>
+                            <li><a class="btn btn-primary" onclick="sendLedger()">Send Ledger</a></li>
+                        <% } else { %>
+                            <li><a href="/branch/order/details/<%= order.id %>" class="btn btn-primary">Back</a></li>
+                            <li><a class="btn btn-primary" onclick="printLedger()">Print</a></li>
+                            <li><a class="btn btn-primary" onclick="sendLedger()">Send Ledger</a></li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            function printLedger() {
+                const printableContent = document.getElementById('printableArea').innerHTML;
+                const originalContent = document.body.innerHTML;
+                document.body.innerHTML = printableContent;
+                window.print();
+                location.reload();
+            }
+
+            function sendLedger() {
+                const urlParams = new URLSearchParams(window.location.search);
+        
+                // Extract the startDate and endDate from the URL query parameters
+                const startDate = urlParams.get('startDate');
+                const endDate = urlParams.get('endDate');
+
+                let url = '/admin/orders/send-ledger?';
+                if (startDate) url += `startDate=${encodeURIComponent(startDate)}&`;
+                if (endDate) url += `endDate=${encodeURIComponent(endDate)}`;
+
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {}, 
+                    success: function(response) {
+                        alert("Email Sent Successfully!");
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error: " + status + ": " + error);
+                        alert("Error sending the email: " + error);
+                    }
+                    });
+                }
+
+        </script>
+        
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    </body>
+</html>

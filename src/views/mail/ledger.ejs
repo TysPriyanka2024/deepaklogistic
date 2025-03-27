@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FuelDemo | Ledger</title>
+        <style>
+            .container {
+                width: 100%;
+                max-width: 1400px; /* Prevents stretching on large screens */
+                margin: auto;
+                padding: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                background-color: #ffffff;
+                border-radius: 8px;
+                text-align: center;
+            }
+
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            
+            th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: center;
+                word-wrap: break-word; /* Ensures content wraps properly */
+                white-space: nowrap; /* Allow wrapping text */
+            }
+
+            th {
+                background-color: #f4f4f4;
+            }
+
+            .button-group ul {
+                padding: 0;
+                margin: 20px 0 0 0;
+                display: flex;
+                list-style: none;
+                justify-content: center;
+            }
+
+            .button-group li {
+                margin-right: 5%;
+            }
+
+            .btn-primary {
+                border: 2px solid #0da487 !important;
+                color: #0da487;
+                background-color: #f9f9f6;
+                padding: 10px 20px;
+                text-decoration: none;
+            }
+
+            .btn-primary:hover {
+                color: white;
+                background-color: #097560 !important;
+                border-color: #097560 !important;
+            }
+
+             /* Hide the table for email view */
+            .hide-in-email {
+                display: none;
+            }
+
+            /* Styles for print */
+            @media print {
+                
+                body {
+                    font-size: 12px;
+                }
+
+                .container {
+                    width: 100%;
+                    padding: 0;
+                    margin: 0;
+                    box-shadow: none;
+                    border-radius: 0;
+                }
+
+                .hide-on-print {
+                    display: none;
+                }
+
+                table {
+                    width: 100%;
+                    font-size: 12px;
+                    border: 1px solid black;
+                }
+
+                /* Show table in the PDF */
+                .hide-in-email {
+                    display: block !important;
+                }
+
+                th, td {
+                    padding: 5px;
+                    font-size: 12px;
+                    word-wrap: break-word; /* Ensures content wraps properly */
+                    white-space: nowrap;
+                }
+            }
+        </style>
+</head>
+<body>
+    <div class="container" id="printableArea">
+        <!-- <h2>Ledger</h2> -->
+        <h2 style="text-align: left;">Ledger Details</h2>
+        <div class="hide-on-print">
+            <p style="text-align: left;">Dear Admin,</p>
+            <p style="text-align: left;">Please find below the ledger details of</p>
+        </div> 
+        <div class="hide-in-email">
+            <table>
+                <tr>
+                    <th>Sr No</th>
+                    <th>Order Id</th>
+                    <th>Order Date</th>
+                    <th>Dispense Time</th>
+                    <th>Challan No.</th>
+                    <th>Authorised By</th>
+                    <th>Dispensed To</th>
+                    <th>Ordered Quantity</th>
+                    <th>Dispensed</th>
+                    <th>Customer Asset Name</th>
+                    <th>Total Amount</th>
+                </tr>
+                <% if (orders != '') { %>
+                    <% orders.forEach((row, index) => { %>  
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><a><%= row.order_id %></a></td>
+                            <td><%= row.created_date.toLocaleDateString('en-UK', options) %></td>
+                            <td>
+                                <% 
+                                    const createdDate = new Date(row.updated_date);
+                                    const formattedDate = createdDate.toLocaleDateString('en-GB');
+                                    const formattedTime = createdDate.toLocaleTimeString('en-GB');
+                                %>
+                                <%= formattedDate %> <%= formattedTime %>
+                            </td>
+                            <td><%= row.challan_number %> </td>
+                            <td><%= row.authorised_by %>
+                                <!-- <% if(row.is_delivery_man_assigned) { %>
+                                    <div>
+                                        <span><%= user.first_name %> <%= user.last_name %></span>
+                                    </div>
+                                <% } else { %>
+                                    <div>
+                                        <span style="background-color: rgba(154,154,154,0.2); color: #9a9a9a;">
+                                            <%= row.delivery_man %>
+                                        </span>
+                                    </div>
+                                <% } %> -->
+                            </td>
+                            <td><a><%= row.user_id.vehicle_number %></a></td>
+                            <td><%= row.product_items[0].quantity %></td>
+                            <td>
+                                <% if (row.status == "Delivered") { %>
+                                    <span><%= row.product_items[0].quantity %></span>
+                                <% } else { %>
+                                    <span>0</span>
+                                <% } %>
+                            </td>
+                            <td><a><%= row.user_id.company %></a></td>
+                            <td><%= row.total_price %></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="11">Nothing To Show</td>
+                    </tr>
+                <% } %>
+
+                <tr>
+                    <td colspan="7"></td>
+                    <td style="white-space: normal;">Total Quantity: <%- totalQuantity %></td>
+                    <td colspan="2"></td>
+                    <td  style="white-space: normal;">Total Amount: <%- totalAmount %></td>
+                </tr>
+            </table>
+
+        </div>
+        <div class="hide-on-print">
+            <p class="footer" style="text-align: left;">Thank you for using FuelDemo. For any queries, feel free to contact us.</p>
+        </div>
+
+    </div>
+</body>
+</html>

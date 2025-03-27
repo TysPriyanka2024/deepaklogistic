@@ -1,0 +1,58 @@
+<%- include('../../partials/main', { pageTitle: 'Vehicle Tracking' }) %>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCOSLNx2YesgpKBIckkEi_fGhjZQ_tyMo4&callback=initMap" async defer></script>
+
+
+<!-- Container-fluid starts-->
+<div class="page-body">
+    <!-- All User Table Start -->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card card-table">
+                    <div class="card-body">
+                        <div style="position: relative;">
+                            <div id="map" style="height: 650px; width: 100%;"></div>
+                            <div style="position: absolute; top: 40px; right: 10px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 250px;">
+                                <h4>Vehicle Info</h4>
+                                <p><strong>Vehicle Number:</strong> <span id="Vehicle Number"><%= vehicle_no %></span></p>
+                                <p><strong>Location:</strong> <span id="locationText"><%= location %></span></p>
+                                <p><strong>Speed:</strong> <span id="speedText"><%= speed %></span> km/h</p>
+                                <p><strong>Status:</strong> <span id="statusText"><%= status %></span></p>
+                                <p><strong>Fuel Quantity</strong> <span id="Fuel Quantity Text"><%= fuel %></span>Ltr</p>
+                            </div>
+                        </div>
+
+                        
+                        <script>
+                            let map;
+                            let marker;
+                            const vehicleNo = "<%= vehicle_no %>";
+                            const latitude = parseFloat("<%= latitude %>");
+                            const longitude = parseFloat("<%= longitude %>");
+
+                            function initMap() {
+                                const vehiclePosition = { lat: latitude, lng: longitude };
+                                
+                                map = new google.maps.Map(document.getElementById("map"), {
+                                    center: vehiclePosition,
+                                    zoom: 15
+                                });
+
+                                marker = new google.maps.Marker({
+                                    position: vehiclePosition,
+                                    map: map,
+                                    title: vehicleNo
+                                });
+                            }
+                        </script>
+                        <%- include('../../partials/footer') %>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../../partials/end')%>
