@@ -79,7 +79,7 @@ module.exports = {
       try{
         const user = req.user;
         const page = req.query.page ? parseInt(req.query.page) : 1; // Start from page 0
-        const perPage = req.query.perPage ? parseInt(req.query.perPage) : 10; // Items per page
+        const perPage = req.query.perPage ? parseInt(req.query.perPage) : 100; // Items per page
 
         if(!user){
           return res.redirect('/admin/auth/login')
@@ -895,7 +895,7 @@ module.exports = {
           const user = req.user;
           const { startDate, endDate } = req.query;
           const page = req.query.page ? parseInt(req.query.page) : 1;
-          const perPage = req.query.perPage ? parseInt(req.query.perPage) : 10;
+          const perPage = req.query.perPage ? parseInt(req.query.perPage) : 100;
   
           if (!user) { return res.redirect('/admin/auth/login'); }
   
@@ -969,7 +969,7 @@ module.exports = {
       try {
         const user = req.user;
         const page = req.query.page ? parseInt(req.query.page) : 1;
-        const perPage = req.query.perPage ? parseInt(req.query.perPage) : 10;
+        const perPage = req.query.perPage ? parseInt(req.query.perPage) : 50;
         const { startDate, endDate } = req.query;
     
         if (!user) {
