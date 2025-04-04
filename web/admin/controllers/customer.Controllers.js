@@ -373,113 +373,6 @@ module.exports = {
     }
     ,
 
-  // Add Category List
-    // postAdd: async (req, res) => {
-    //   try{
-    //     const { first_name,last_name, email, phone,vehicle_number, company, accept_term, gst_no, credit_limit, address1, address2, area, pincode, city, state, country, payment_method , discount , volume_discount , card_discount, delivery_fee} = req.body;
-    //     const imageFilename = req.files['image'] ? req.files['image'][0].filename : "user/default_profile.png";
-    //     const defaultProfileImage = 'images/user/default_profile.png';
-    //     var is_privilaged = false ;
-    //     // Set the image filename to either the uploaded image or the default profile image
-    //     const imgData = `${req.body.maincategory}/${req.body.subcategory}/${imageFilename}` ? imageFilename : defaultProfileImage;
-
-    //     if(discount > 0 || volume_discount > 0 || card_discount > 0 || discount < 0 || volume_discount < 0 || card_discount < 0){
-    //       is_privilaged = true;
-    //     }else if (discount === 0 && volume_discount === 0 && card_discount === 0) {
-    //       is_privilaged = false;
-    //     }
-
-    //     const acceptTerm = accept_term === "true";
-
-    //     if (!first_name || !last_name || !email || !phone || !company || !vehicle_number) {
-    //       throw new Error('Required fields are missing.');
-    //     }
-        
-    //     // Validate if the customer with same number and email exists
-    //     const existingUserByEmail = await models.UserModel.User.findOne({phone : phone});
-    //     const existingUserByPhone = await models.UserModel.User.findOne({email : email})
-    //     const existingUserByVehicleNumber = await models.UserModel.User.findOne({vehicle_number : vehicle_number})
-
-
-    //     if(existingUserByEmail || existingUserByPhone || existingUserByVehicleNumber){
-    //       res.redirect(`/admin/customer/list?error=${encodeURIComponent("Customer With Same Email/Phone /vehicle  Number already Exists")}`);
-    //     }
-
-    //     const customer = new models.UserModel.User({
-    //       first_name,
-    //       last_name,
-    //       email,
-    //       phone,
-    //       company,
-    //       vehicle_number,
-    //       usertype: "Customer",
-    //       profile:  imgData,
-    //       gst_no : gst_no,
-    //       is_active : true,
-    //       discount : discount,
-    //       volume_discount : volume_discount,
-    //       card_discount : card_discount,           
-    //       delivery_fee : delivery_fee,
-    //       is_privilaged : is_privilaged,
-    //       accept_term : acceptTerm,
-    //       is_address_available : true,
-    //       payment_method : payment_method,
-    //     })
-    
-    //     await customer.save();
-    //     const address = new models.UserModel.Address({
-    //       user_id : customer._id, 
-    //       address_type : "Home",
-    //       address_1 : address1,
-    //       address_2 : address2,
-    //       area,
-    //       city,
-    //       state,
-    //       country,
-    //       pincode,
-    //       primary : true
-    //     })
-    //     await address.save();
-
-    //     const transaction = await models.UserModel.Wallet.find();
-    //     const walletLength = transaction.length;
-    //     const number = walletLength + 1;
-
-    //     const walletData = {
-    //       user_id : customer._id,
-    //       total_credit : credit_limit
-    //     }
-  
-    //     const newWallet = new models.UserModel.Wallet(walletData);
-
-    //     const transactionData = {
-    //       transaction_id : createCreditTransactionId("CRED", number),
-    //       wallet_id : newWallet._id,
-    //       credited : newWallet.total_credit,
-    //       available : newWallet.total_credit,
-    //       status : true
-    //     }
-
-    //     const newTranscation = new models.UserModel.Transaction(transactionData)
-
-    //     await newWallet.save();
-    //     await newTranscation.save();
-
-    //     await models.UserModel.User.findOneAndUpdate(
-    //       { _id: customer._id },
-    //       { has_wallet : true }
-    //     );
-
-    //     console.log("Customer added successfully");
-    //     res.redirect('/admin/customer/list');
-    
-    //   }catch (err) {
-    //     console.error(err);
-    //     res.redirect(`/admin/customer/list?error=${encodeURIComponent(err.message)}`);
-    //   }
-    
-    // },
-
 
   // Update Status
     updateStatus : async (req, res) => {
@@ -866,8 +759,34 @@ module.exports = {
       console.log(err.message);
       res.status(404).send(err.message);
     }
-  }
+  },
 
+getVehiclesByCompany: async (req, res) => {
+  try {
+      const company = req.query.company; // Get company from query parameter
+      console.log("Company received:", company);
+      const user = req.user;
+      if (!user) {
+          return res.redirect('/admin/auth/login');
+      }
+
+      if (!company) {
+          return res.status(400).json({ error: "Company ID is required" });
+      }
+
+      // Fetch vehicles belonging to the selected company
+      const vehicles = await models.UserModel.User.find({company : company});
+
+      if (vehicles.length === 0) {
+          return res.status(404).json({ error: "No vehicles found for this company" });
+      }     
+
+      res.json(vehicles); // Send the vehicles as a response
+  } catch (err) {
+      console.error("Error fetching vehicles:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 }
 
 

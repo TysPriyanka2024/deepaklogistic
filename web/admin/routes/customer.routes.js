@@ -13,6 +13,7 @@ router.get('/update/:customerId', AuthMiddleware.authenticateToken() ,CustomerCo
 
 router.post('/payment-in/:customer_id', AuthMiddleware.authenticateToken() ,CustomerControllers.getPaymentIN);
 
+router.get('/getVehiclesByCompany', AuthMiddleware.authenticateToken(), CustomerControllers.getVehiclesByCompany);
 
 router.post('/add', 
   AuthMiddleware.authenticateToken() ,

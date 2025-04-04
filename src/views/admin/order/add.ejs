@@ -20,6 +20,26 @@
                                                 <div class="card-header-2">
                                                     <h5>Order Information </h5>
                                                 </div>
+
+                                                <div class="row">
+                                                    <div class="mb-4 row align-items-center">
+                                                        <label
+                                                            class="col-lg-3 col-md-3 col-form-label form-label-title">Organisation Name
+                                                        </label>
+                                                        <div class="col-md-9 col-lg-9">
+                                                            <select class="js-example-basic-single w-100" name="company" id="company" required>
+                                                                <option value="none">-- All Organisation --</option>
+                                                                <% if (companies != '') { %>        
+                                                                    <% companies.forEach((row) => { %> 
+                                                                        <option value="<%= row.name %>"> <%= row.name %></option>
+                                                                <% }) %>      
+                                                                <% } else { %>
+                                                                    <option>Nothing To Show</option>
+                                                                <% } %>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <div class="row">
                                                     <div class="mb-4 row align-items-center">
                                                         <label
@@ -120,42 +140,50 @@
                 }
             </script>
 
-<script>
-    $(document).ready(function () {
-        $("#state").change(function () {
-            var selectedCategoryId = $(this).val();
-            $.ajax({
-                url: "/admin/customer/getCityList",
-                method: "GET",
-                data: { state: selectedCategoryId },
-                success: function (data) {
-                    var subcategoryDropdown = $("#cities");
-                    subcategoryDropdown.empty();
-                    
-                    // Add a default or selected option
-                    subcategoryDropdown.append(
-                        $("<option>").text('Select City')
-                    );
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-                    if (data.length > 0) {
-                        data.forEach(function (row) {
-                            subcategoryDropdown.append(
-                                $("<option>").val(row.name).text(row.name)
-                            );
-                        });
-                    } else {
-                        subcategoryDropdown.append(
-                            $("<option>").text("We Don't Server in this city")
+<script>
+$(document).ready(function () {
+    $("#company").change(function () {
+        var selectedCompany = $(this).val().trim(); // Get selected company
+        if (!selectedCompany || selectedCompany === "none") {
+            console.error("No company selected");
+            return;
+        }
+
+        console.log("Selected company: ", selectedCompany); // Debugging line
+
+        $.ajax({
+            url: "/admin/customer/getVehiclesByCompany",
+            method: "GET",
+            data: { company: selectedCompany },
+            dataType: "json",
+            success: function (data) {
+                console.log("Vehicles Data:", data); // Debugging
+
+                var vehicleDropdown = $("#selectOption");
+                vehicleDropdown.empty();
+                vehicleDropdown.append($("<option>").val("none").text("-- Select Vehicle --"));
+
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(function (row) {
+                        vehicleDropdown.append(
+                            $("<option>").val(row.vehicle_number).text(row.vehicle_number)
                         );
-                    }
-                },
-                error: function () {
-                    console.log("Error fetching cities");
+                    });
+                } else {
+                    vehicleDropdown.append($("<option>").text("No vehicles available"));
                 }
-            });
+            },
+            error: function (xhr, status, error) {
+                console.error("Error fetching vehicles:", error);
+                alert("Error fetching vehicles. Please check the console for details.");
+            }
         });
     });
+});
 </script>
+
 <script>
     $(document).ready(function () {
         $("#state").change(function () {

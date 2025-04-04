@@ -1567,8 +1567,9 @@ module.exports = {
 
             // const products = await models.BranchModel.BranchProduct.find({})
             const usersList = await models.UserModel.User.find({});
+            const companies = await models.SettingModel.Company.find({});
             
-            res.render('admin/order/add', { user, usersList, error: "Add New Order" });
+            res.render('admin/order/add', { user,companies ,usersList, error: "Add New Order" });
         } catch (error) {
           console.error('Internal Server Error', error);
           return res.status(StatusCodesConstants.INTERNAL_SERVER_ERROR).json({
