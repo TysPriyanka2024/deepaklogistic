@@ -1339,9 +1339,9 @@ module.exports = {
                         presence: { allowEmpty: false },
                         length: { minimum: 3 }
                     },
-                    challan: {
-                        presence: { allowEmpty: false },
-                    }
+                    // challan: {
+                    //     presence: { allowEmpty: false },
+                    // }
                 });
         
                 if (validationResult) {
