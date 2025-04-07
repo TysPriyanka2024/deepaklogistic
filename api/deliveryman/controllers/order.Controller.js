@@ -1367,7 +1367,7 @@ module.exports = {
                     return res.status(StatusCodesConstants.SUCCESS).json({
                         status: true,
                         status_code: StatusCodesConstants.SUCCESS,
-                        message: "Challan Number Added Successfully",
+                        message: "Number Added Successfully",
                         data: existingOrder, // Return the updated order
                     });
                 } else {
@@ -1398,15 +1398,16 @@ module.exports = {
                 }
 
               const challan_number = req.params.challan_number.toUpperCase();
-              console.log(challan_number.toUpperCase());
-              const order = await models.BranchModel.Order.findOne({challan_number : challan_number});
-              console.log(order);
-              if(order){
-                res.send({status : false, message : "Challan Number Already Exists"});
-              }else{
+            //   console.log(challan_number.toUpperCase());
+            //   const order = await models.BranchModel.Order.findOne({challan_number : challan_number});
+            //   console.log(order);
+            //   if(order){
+            //     res.send({status : false, message : "Challan Number Already Exists"});
+            //   }else{
+            //     res.send({status : true, message : "Success"});
+            //   }
+            
                 res.send({status : true, message : "Success"});
-              }
-              
             }catch(err){
               console.log(err)
               res.send({status : false, message : err});
