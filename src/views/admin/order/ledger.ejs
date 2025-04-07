@@ -39,6 +39,9 @@
                                                             <input type="date" id="endDateInput" name="endDate" class="form-control" value="<%= endDate %>" required />
                                                         </div>
                                                         <div class="col-12 col-md-auto">
+                                                            <input type="text" name="company" id="company" value="<%= selectedCompany || '' %>">
+                                                        </div>
+                                                        <div class="col-12 col-md-auto">
                                                             <button type="submit" class="btn btn-theme w-100">
                                                                 <i data-feather="search"></i> Filter
                                                             </button>
@@ -309,10 +312,12 @@
                 function sendLedger() {
                     const startDateInput = document.getElementById('startDateInput').value; // Start date
                     const endDateInput = document.getElementById('endDateInput').value;   // End date
+                    const selectedCompany = document.getElementById('company').value; // Company name
 
                     let url = '/admin/orders/send-ledger?';
                     if (startDateInput) url += `startDate=${encodeURIComponent(startDateInput)}&`;
-                    if (endDateInput) url += `endDate=${encodeURIComponent(endDateInput)}`;
+                    if (endDateInput) url += `endDate=${encodeURIComponent(endDateInput)}&`;
+                    if (selectedCompany) url += `company=${encodeURIComponent(selectedCompany)}`;
 
                     $.ajax({
                         type: "POST",
@@ -407,10 +412,12 @@
     function redirectToLedger() {
         const startDateInput = document.getElementById('startDateInput').value; // Start date
         const endDateInput = document.getElementById('endDateInput').value;   // End date
+        const selectedCompany = document.getElementById('company').value; // Company name
 
         let url = '/admin/orders/print?';
         if (startDateInput) url += `startDate=${encodeURIComponent(startDateInput)}&`;
-        if (endDateInput) url += `endDate=${encodeURIComponent(endDateInput)}`;
+        if (endDateInput) url += `endDate=${encodeURIComponent(endDateInput)}&`;
+        if (selectedCompany) url += `company=${encodeURIComponent(selectedCompany)}`;
 
         window.location.href = url;
     }

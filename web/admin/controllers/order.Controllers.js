@@ -892,73 +892,78 @@ module.exports = {
 
     filterOrder: async (req, res) => {
       try {
-          const user = req.user;
-          const { startDate, endDate } = req.query;
-          const page = req.query.page ? parseInt(req.query.page) : 1;
-          const perPage = req.query.perPage ? parseInt(req.query.perPage) : 100;
-  
-          if (!user) { return res.redirect('/admin/auth/login'); }
-  
-          if (!startDate || !endDate || isNaN(Date.parse(startDate)) || isNaN(Date.parse(endDate))) {
-              return res.status(400).send('Invalid date range provided.');
-          }
-
-          let filter = {};
-          if (startDate && endDate) {
-
-            const start = new Date(startDate);
-            start.setHours(0, 0, 0, 0);
-      
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999);
-      
-            filter.created_date = { $gte: start, $lte: end };
-          }
-
-
-          let status = "Delivered"
-          if (status) {
-            filter.status = status; 
-          }
-          const totalOrders = await models.BranchModel.Order.find(filter); 
-          const totalOrderCount = await models.BranchModel.Order.countDocuments(filter)
-  
-          const orders = await models.BranchModel.Order
-              .find(filter)
-              .populate('user_id')
-              .populate('branch_id')
-              .populate('address_id')
-              .populate('delivery_id')
-              .sort({ created_date: -1 })
-              .skip((page - 1) * perPage)
-              .limit(perPage)
-              .exec();
-
-          const totalQuantity = totalOrders.reduce((sum, order) => {
-                return sum + order.product_items.reduce((itemSum, item) => itemSum + item.quantity, 0);
-            }, 0);
-      
-          const totalAmount = totalOrders.reduce((sum, order) => sum + order.total_price, 0).toFixed(2)
-  
-          const customers = await models.UserModel.User.find({ usertype: "Customer" });
-          const branches = await models.BranchModel.Branch.find();
-  
-          const totalPages = Math.ceil(totalOrderCount/ perPage);
-  
-          const options = {currentPage: page,perPage,totalPages,};
-          res.render('admin/order/ledger', {
-              user,
-              branches,
-              ordersCount:totalOrderCount,
-              customers,
-              orders,
-              options,
-              totalAmount,
-              totalQuantity,
-              error: "List of Orders",
-              startDate,
-              endDate,
-          });
+        const user = req.user;
+        const { startDate, endDate, company } = req.query;
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const perPage = req.query.perPage ? parseInt(req.query.perPage) : 100;
+    
+        if (!user) return res.redirect('/admin/auth/login');
+        if (!startDate || !endDate || isNaN(Date.parse(startDate)) || isNaN(Date.parse(endDate))) {
+          return res.status(400).send('Invalid date range provided.');
+        }
+    
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+    
+        let filter = {
+          created_date: { $gte: start, $lte: end },
+          status: "Delivered"
+        };
+    
+        // Fetch all orders (for calculating totals)
+        const totalOrders = await models.BranchModel.Order.find(filter).populate({
+          path: 'user_id',
+          match: company ? { company: { $regex: company, $options: 'i' } } : {},
+        });
+    
+        // Filter null user (if population didn’t match company)
+        const filteredTotalOrders = totalOrders.filter(order => order.user_id !== null);
+    
+        // For paginated result
+        const orders = await models.BranchModel.Order.find(filter)
+          .populate({
+            path: 'user_id',
+            match: company ? { company: { $regex: company, $options: 'i' } } : {},
+          })
+          .populate('branch_id')
+          .populate('address_id')
+          .populate('delivery_id')
+          .sort({ created_date: -1 })
+          .exec();
+    
+        const filteredOrders = orders.filter(order => order.user_id !== null);
+    
+        const totalOrderCount = filteredTotalOrders.length;
+        const paginatedOrders = filteredOrders.slice((page - 1) * perPage, page * perPage);
+    
+        const totalQuantity = filteredTotalOrders.reduce((sum, order) => {
+          return sum + order.product_items.reduce((itemSum, item) => itemSum + item.quantity, 0);
+        }, 0);
+    
+        const totalAmount = filteredTotalOrders.reduce((sum, order) => sum + order.total_price, 0).toFixed(2);
+    
+        const customers = await models.UserModel.User.find({ usertype: "Customer" });
+        const branches = await models.BranchModel.Branch.find();
+    
+        const totalPages = Math.ceil(totalOrderCount / perPage);
+        const options = { currentPage: page, perPage, totalPages };
+    
+        res.render('admin/order/ledger', {
+          user,
+          branches,
+          customers,
+          orders: paginatedOrders,
+          ordersCount: totalOrderCount,
+          options,
+          totalAmount,
+          totalQuantity,
+          error: "List of Orders",
+          startDate,
+          endDate,
+          selectedCompany: company || ''
+        });
       } catch (err) {
           console.error(err);
           res.status(StatusCodesConstants.INTERNAL_SERVER_ERROR).send(MessageConstants.INTERNAL_SERVER_ERROR);
@@ -970,7 +975,7 @@ module.exports = {
         const user = req.user;
         const page = req.query.page ? parseInt(req.query.page) : 1;
         const perPage = req.query.perPage ? parseInt(req.query.perPage) : 50;
-        const { startDate, endDate } = req.query;
+        const { startDate, endDate ,company} = req.query;
     
         if (!user) {
           return res.redirect('/admin/auth/login');
@@ -1039,7 +1044,8 @@ module.exports = {
           totalQuantity,
           ordersWithRunningTotal,
           startDate: startDate || '', 
-          endDate: endDate || '', 
+          endDate: endDate || '',
+          selectedCompany: company || '', 
           error: "List of Orders",
         });
 
@@ -1054,13 +1060,15 @@ module.exports = {
     printLedger : async (req , res) =>{
       try{
         const user = req.user;
-        const page = req.query.page ? parseInt(req.query.page) : 0; // Start from page 0
+        const page = req.query.page ? parseInt(req.query.page) : 1; // Start from page 0
         const perPage = req.query.perPage ? parseInt(req.query.perPage) : 20; // Items per page
 
         if(!user){
           return res.redirect('/admin/auth/login')
         }
-        const { startDate, endDate } = req.query;
+        const { startDate, endDate,company } = req.query;
+
+        console.log("company",company)
         let filter = {};
   
           // Apply date filters
@@ -1078,39 +1086,53 @@ module.exports = {
           filter.status = status; 
         }
 
-        const totalOrders = await models.BranchModel.Order.countDocuments(filter); 
-        const totalPages = Math.ceil(totalOrders / perPage);
-        const options = {currentPage: page,perPage,totalPages,};
+        const totalOrders = await models.BranchModel.Order.find(filter)
+        .populate({
+          path: 'user_id',
+          match: company ? { company: { $regex: company, $options: 'i' } } : {},
+        });
 
-      const orders = await models.BranchModel.Order
-        .find(filter)
-        .populate('user_id')
+        const filteredTotalOrders = totalOrders.filter(order => order.user_id !== null);
+
+      const orders = await models.BranchModel.Order.find(filter)
+        .populate({
+          path: 'user_id',
+          match: company ? { company: { $regex: company, $options: 'i' } } : {},
+        })
         .populate('branch_id')
         .populate('address_id')
         .populate('delivery_id') 
         .sort({ created_date: -1 })
+        .exec();
 
-      const totalQuantity = orders.reduce((sum, order) => {
+        const filteredOrders = orders.filter(order => order.user_id !== null);
+        const paginatedOrders = filteredOrders.slice((page - 1) * perPage, page * perPage);
+
+        const totalOrderCount = filteredTotalOrders.length;
+        const totalPages = Math.ceil(totalOrderCount / perPage);
+        const options = { currentPage: page, perPage, totalPages };
+
+      const totalQuantity = filteredTotalOrders.reduce((sum, order) => {
           return sum + order.product_items.reduce((itemSum, item) => itemSum + item.quantity, 0);
       }, 0);
 
-      const totalAmount = orders.reduce((sum, order) => sum + order.total_price, 0).toFixed(2)
+      const totalAmount = filteredTotalOrders.reduce((sum, order) => sum + order.total_price, 0).toFixed(2)
     
       const customers = await models.UserModel.User.find({ usertype: "Customer" });
       const branches = await models.BranchModel.Branch.find();
-      const ordersCount = orders.length;
 
       res.render('partials/ledger', {
         user,
         branches,
-        ordersCount,
+        ordersCount : totalOrderCount,
         customers,
-        orders,
+        orders : paginatedOrders,
         options,
         totalAmount,
         totalQuantity,
         startDate: startDate || '',
         endDate: endDate || '',
+        selectedCompany: company || '',
         error: "Filtered Orders for Printing",
     });
 
@@ -1125,14 +1147,14 @@ module.exports = {
     sendLedger: async (req, res) => {
       try {
           const user = req.user;
-          const page_1 = req.query.page ? parseInt(req.query.page) : 0;
+          const page_1 = req.query.page ? parseInt(req.query.page) : 1;
           const perPage = req.query.perPage ? parseInt(req.query.perPage) : 20;
           if (!user) {
               return res.redirect('/admin/auth/login');
           }
 
-          const { startDate, endDate } = req.query;
-          console.log("startDate------------",startDate)
+          const { startDate, endDate  , company} = req.query;
+          console.log(`startDate------------${startDate} and endDate------------${endDate} and company ${company}`) 
           let filter = {};
 
           let status = "Delivered"
@@ -1154,22 +1176,37 @@ module.exports = {
           const today = new Date(); 
           const formattedDate = today.toISOString().split('T')[0]; 
 
-          const orders = await models.BranchModel.Order
-            .find(filter)
-            .populate('user_id')
+        const totalOrders = await models.BranchModel.Order.find(filter)
+          .populate({
+            path: 'user_id',
+            match: company ? { company: { $regex: company, $options: 'i' } } : {},
+          });
+
+        const filteredTotalOrders = totalOrders.filter(order => order.user_id !== null);
+
+          const orders = await models.BranchModel.Order.find(filter)
+            .populate({
+              path: 'user_id',
+              match: company ? { company: { $regex: company, $options: 'i' } } : {},
+            })
             .populate('branch_id')
             .populate('address_id')
             .populate('delivery_id') 
             .sort({ created_date: -1 })
+            .exec();
 
-          const totalAmount = orders.reduce((sum, order) => sum + order.total_price, 0);
-          const totalQuantity = orders.reduce((sum, order) => sum + order.product_items.reduce((q, item) => q + item.quantity, 0), 0);
 
-          const totalOrders = await models.BranchModel.Order.countDocuments(filter); 
-          const totalPages = Math.ceil(totalOrders / perPage);
-          const options = {currentPage: page_1,perPage,totalPages,};
+            const filteredOrders = orders.filter(order => order.user_id !== null);
+            const paginatedOrders = filteredOrders.slice((page_1 - 1) * perPage,page_1 * perPage);
 
-          const recipientEmail = "payments@ailsinghanitransport.com";
+            const totalOrderCount = filteredTotalOrders.length;
+            const totalPages = Math.ceil(totalOrderCount / perPage);
+            const options = { currentPage: page_1, perPage, totalPages };
+
+          const totalAmount = filteredTotalOrders.reduce((sum, order) => sum + order.total_price, 0);
+          const totalQuantity = filteredTotalOrders.reduce((sum, order) => sum + order.product_items.reduce((q, item) => q + item.quantity, 0), 0);
+
+          const recipientEmail = "priya971110@gmail.com";
           console.log("mail id ------------" , recipientEmail)
           let subject , ledgerName
           if (startDate && endDate) {
@@ -1185,7 +1222,7 @@ module.exports = {
 
           // Read the email template
           const emailTemplateContent = await promisify(fs.readFile)(templateFilePath, 'utf8');
-          const renderedEmailContent = ejs.render(emailTemplateContent, { orders,options,user,startDate,endDate,totalAmount, totalQuantity });
+          const renderedEmailContent = ejs.render(emailTemplateContent, { orders : paginatedOrders,options,user,startDate,endDate,totalAmount, totalQuantity });
           const minifiedHtml = minify(renderedEmailContent, {
               removeAttributeQuotes: true,
               collapseWhitespace: true,
