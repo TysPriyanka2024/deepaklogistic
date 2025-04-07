@@ -99,10 +99,10 @@
                                                             </td>
                                                             <td><%= row.created_date.toLocaleDateString('en-UK', options) %></td>
                                                             <td>
-                                                            <% 
+                                                                <% 
                                                                     const createdDate = new Date(row.updated_date);
-                                                                    const formattedDate = createdDate.toLocaleDateString('en-GB'); // Format the date (DD/MM/YYYY)
-                                                                    const formattedTime = createdDate.toLocaleTimeString('en-GB'); // Format the time (HH:MM:SS AM/PM)
+                                                                    const formattedDate = createdDate.toLocaleDateString('en-GB',  { timeZone: 'Asia/Kolkata' }); // Format the date (DD/MM/YYYY)
+                                                                    const formattedTime = createdDate.toLocaleTimeString('en-GB',  { timeZone: 'Asia/Kolkata' }); // Format the time (HH:MM:SS AM/PM)
                                                                 %>
                                                                 <%= formattedDate %> <%= formattedTime %>
                                                             </td>

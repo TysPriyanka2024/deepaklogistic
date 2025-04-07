@@ -90,7 +90,7 @@ const orderSchema = new mongoose.Schema({
     },
     authorised_by :{
         type : String,
-        default : 'Rajesh Changlani',
+        default : 'Deepak Logistics',
     },
     delivery_date: {
         type: String,
