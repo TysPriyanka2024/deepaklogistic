@@ -204,10 +204,12 @@
                 // Extract the startDate and endDate from the URL query parameters
                 const startDate = urlParams.get('startDate');
                 const endDate = urlParams.get('endDate');
+                const selectedCompany = document.getElementById('company').value; 
 
                 let url = '/admin/orders/send-ledger?';
                 if (startDate) url += `startDate=${encodeURIComponent(startDate)}&`;
-                if (endDate) url += `endDate=${encodeURIComponent(endDate)}`;
+                if (endDate) url += `endDate=${encodeURIComponent(endDate)}&`;
+                if (selectedCompany) url += `company=${encodeURIComponent(selectedCompany)}`;
 
                 $.ajax({
                     type: "POST",
