@@ -167,16 +167,31 @@
                                         </table>
                                     </div>
 
-                                    <div class="pagination d-flex justify-content-end" style = "margin-top: 10px;">
+                                    <div class="pagination d-flex justify-content-end" style="margin-top: 10px;">
                                         <ul class="pagination">
+                                    
                                             <% if (options.prevPage) { %>
                                                 <li class="page-item">
-                                                    <a  href="?page=<%= options.prevPage %>"
-                                                        class="btn btn-theme me-2">&laquo; Prev</a>
+                                                    <a href="?page=<%= options.prevPage %>" class="btn btn-theme me-2">&laquo; Prev</a>
                                                 </li>
                                             <% } %>
-                                            
-                                            <% for (let i = 1; i <= options.totalPages; i++) { %>
+                                    
+                                            <% 
+                                                let startPage = Math.max(1, options.currentPage - 1);
+                                                let endPage = Math.min(options.totalPages, options.currentPage + 1);
+                                    
+                                                // Adjust range if near the start
+                                                if (options.currentPage <= 2) {
+                                                    endPage = Math.min(3, options.totalPages);
+                                                }
+                                    
+                                                // Adjust range if near the end
+                                                if (options.currentPage >= options.totalPages - 1) {
+                                                    startPage = Math.max(options.totalPages - 2, 1);
+                                                }
+                                            %>
+                                    
+                                            <% for (let i = startPage; i <= endPage; i++) { %>
                                                 <li class="page-item <%= i === options.currentPage ? 'active' : '' %>">
                                                     <a class="btn btn-theme me-2" href="?page=<%= i %>"><%= i %></a>
                                                 </li>
@@ -187,8 +202,11 @@
                                                     <a class="btn btn-theme me-2" href="?page=<%= options.nextPage %>">Next &raquo;</a>
                                                 </li>
                                             <% } %>
+                                    
                                         </ul>
                                     </div>
+
+                                    
                                 </div>
                             </div>
                         </div>
